@@ -97,18 +97,21 @@ namespace CustomAvatar.Lighting
             foreach (var directionalLight in DirectionalLight.lights)
             {
                 Light light = new GameObject($"DynamicDirectionalLight({directionalLight.name})").AddComponent<Light>();
-
                 light.type = LightType.Directional;
                 light.color = directionalLight.color;
                 light.intensity = 1;
-                light.cullingMask = AvatarLayers.kAllLayersMask;
+                light.cullingMask = AvatarLayers.kAllLayersMask | (1 << 0);
                 light.shadows = LightShadows.Soft;
                 light.shadowStrength = 1;
 
                 light.transform.parent = transform;
                 light.transform.position = Vector3.zero;
                 light.transform.rotation = directionalLight.transform.rotation;
+                float y = directionalLight.transform.rotation.eulerAngles.y % 360;
 
+                light.transform.rotation = Quaternion.Euler(directionalLight.transform.rotation.eulerAngles.x,
+                    (y > 90 && y < 270) ? 180 : 0,
+                    0);
                 _directionalLights.Add((directionalLight, light));
             }
 

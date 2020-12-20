@@ -1,5 +1,5 @@
 //  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright ?2018-2020  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -155,7 +155,21 @@ namespace CustomAvatar.Avatar
             leftLeg   = transform.Find("LeftLeg");
             rightLeg  = transform.Find("RightLeg");
         }
-        
+
+        private void Update()
+        {
+            foreach (var render in _renderers)
+            {
+                foreach (var mat in render.materials)
+                {
+                    if (mat.HasProperty("_HeadForward"))
+                    {
+                        mat.SetVector("_HeadForward", ik._vrik.solver.spine.headTarget.forward);
+                    }
+                }
+            }
+        }
+
         [Inject]
         private void Inject(DiContainer container, ILoggerProvider loggerProvider, LoadedAvatar loadedAvatar, IAvatarInput avatarInput, GameScenesManager gameScenesManager)
         {

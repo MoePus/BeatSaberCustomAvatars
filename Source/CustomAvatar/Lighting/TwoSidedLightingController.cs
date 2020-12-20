@@ -45,7 +45,7 @@ namespace CustomAvatar.Lighting
             light.shadows = LightShadows.Soft;
             light.intensity = intensity;
             light.range = range;
-            light.cullingMask = AvatarLayers.kAllLayersMask;
+            light.cullingMask = AvatarLayers.kAllLayersMask | (1 << 0);
             light.shadowStrength = 1;
             light.shadowBias = 0.05f;
             light.shadowNormalBias = 0.4f;

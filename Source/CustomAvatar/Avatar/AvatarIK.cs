@@ -31,7 +31,7 @@ namespace CustomAvatar.Avatar
 {
     internal class AvatarIK : MonoBehaviour
     {
-        private VRIK _vrik;
+        public VRIK _vrik;
         private VRIKManager _vrikManager;
 
         private bool _fixTransforms;
