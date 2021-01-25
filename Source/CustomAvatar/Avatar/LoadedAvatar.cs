@@ -1,5 +1,5 @@
 //  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
+//  Copyright ?2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -269,7 +269,7 @@ namespace CustomAvatar.Avatar
             Transform rightLowerArm = vrikManager.references_rightForearm;
             Transform rightWrist    = vrikManager.references_rightHand;
 
-            if (!leftShoulder || !leftUpperArm || !leftLowerArm || !leftWrist || !rightShoulder || !rightUpperArm || !rightLowerArm || !rightWrist)
+            if (!leftShoulder || !leftUpperArm || !leftLowerArm || leftWrist || !rightShoulder || !rightUpperArm || !rightLowerArm || !rightWrist)
             {
                 _logger.Warning("Could not calculate avatar arm span due to missing bones");
                 return BeatSaberUtilities.kDefaultPlayerArmSpan;
