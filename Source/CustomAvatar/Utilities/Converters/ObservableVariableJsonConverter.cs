@@ -14,33 +14,32 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using UnityEngine.Events;
-using UnityEngine.Serialization;
+using CustomAvatar.Configuration;
+using Newtonsoft.Json;
+using System;
 
-namespace CustomAvatar
+namespace CustomAvatar.Utilities.Converters
 {
-    public class ComboReachedEvent : EventFilterBehaviour
+    internal class ObservableValueJsonConverter<T> : JsonConverter<ObservableValue<T>>
     {
-        public int ComboTarget = 50;
-        [FormerlySerializedAs("NthComboReached")]
-        public UnityEvent ComboReached;
-
-        private void OnEnable()
+        public override void WriteJson(JsonWriter writer, ObservableValue<T> value, JsonSerializer serializer)
         {
-            EventManager.OnComboChanged.AddListener(OnComboReached);
+            if (value == null) serializer.Serialize(writer, null);
+
+            serializer.Serialize(writer, value.value);
         }
 
-        private void OnDisable()
+        public override ObservableValue<T> ReadJson(JsonReader reader, Type objectType, ObservableValue<T> existingValue, bool hasExistingValue, JsonSerializer serializer)
         {
-            EventManager.OnComboChanged.RemoveListener(OnComboReached);
-        }
+            T obj = serializer.Deserialize<T>(reader);
 
-        private void OnComboReached(int combo)
-        {
-            if (combo == ComboTarget)
+            if (existingValue != null)
             {
-                ComboReached.Invoke();
+                existingValue.value = obj;
+                return existingValue;
             }
+
+            return new ObservableValue<T>(obj);
         }
     }
 }

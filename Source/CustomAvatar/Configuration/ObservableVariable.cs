@@ -14,14 +14,41 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-namespace CustomAvatar.Utilities
+using System;
+
+namespace CustomAvatar.Configuration
 {
-    internal enum BeatSaberScene
+    internal class ObservableValue<T>
     {
-        Unknown,
-        HealthWarning,
-        MainMenu,
-        Game,
-        BeatmapEditor
+        public event Action<T> changed;
+
+        public T value
+        {
+            get => _value;
+            set
+            {
+                _value = value;
+                changed?.Invoke(value);
+            }
+        }
+
+        private T _value;
+
+        public ObservableValue() { }
+
+        public ObservableValue(T value)
+        {
+            _value = value;
+        }
+
+        public static implicit operator T(ObservableValue<T> ov)
+        {
+            return ov.value;
+        }
+
+        public override string ToString()
+        {
+            return _value?.ToString();
+        }
     }
 }

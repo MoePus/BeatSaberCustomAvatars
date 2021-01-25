@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System.Collections;
+using System.Reflection;
 using CustomAvatar.Logging;
 using UnityEngine;
 using Zenject;
@@ -25,9 +26,8 @@ namespace CustomAvatar.Utilities
     internal class ShaderLoader : IInitializable
     {
         public bool hasErrors { get; private set; }
-
-        public Shader stereoMirrorShader;
-        public Shader unlitShader;
+        public Shader stereoMirrorShader { get; private set; }
+        public Shader unlitShader { get; private set; }
 
         private readonly ILogger<ShaderLoader> _logger;
 
@@ -43,7 +43,7 @@ namespace CustomAvatar.Utilities
 
         private IEnumerator GetShaders()
         {
-            AssetBundleCreateRequest shadersBundleCreateRequest = AssetBundle.LoadFromFileAsync("CustomAvatars/Shaders/customavatars.assetbundle");
+            AssetBundleCreateRequest shadersBundleCreateRequest = AssetBundle.LoadFromStreamAsync(Assembly.GetExecutingAssembly().GetManifestResourceStream("CustomAvatar.Resources.shaders.assets"));
             yield return shadersBundleCreateRequest;
 
             if (!shadersBundleCreateRequest.isDone || !shadersBundleCreateRequest.assetBundle)

@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -43,6 +43,8 @@ namespace CustomAvatar.Zenject
             Container.InstantiateComponent<VRGraphicRaycaster>(gameObject);
 
             T viewController = Container.InstantiateComponent<T>(gameObject);
+
+            viewController.gameObject.layer = 5;
 
             RectTransform rectTransform = viewController.rectTransform;
             rectTransform.anchorMin = new Vector2(0.5f, 0);

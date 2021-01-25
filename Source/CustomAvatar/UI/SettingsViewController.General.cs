@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components.Settings;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using HMUI;
 
 namespace CustomAvatar.UI
 {
@@ -36,9 +38,12 @@ namespace CustomAvatar.UI
         [UIComponent("floor-height-adjust")] private DropDownListSetting _floorHeightAdjust;
         [UIComponent("move-floor-with-room-adjust")] private ToggleSetting _moveFloorWithRoomAdjust;
         [UIComponent("camera-clip-plane")] private IncrementSetting _cameraNearClipPlane;
+        [UIComponent("measure-button")] private Button _measureButton;
+        [UIComponent("measure-button")] private HoverHint _measureButtonHoverHint;
+        [UIComponent("height-adjust-warning-text")] private RectTransform _heightAdjustWarningText;
 
-        #pragma warning restore 649
-        #pragma warning restore IDE0044
+#pragma warning restore 649
+#pragma warning restore IDE0044
         #endregion
 
         #region Values
@@ -52,14 +57,13 @@ namespace CustomAvatar.UI
         [UIAction("visible-in-first-person-change")]
         private void OnVisibleInFirstPersonChanged(bool value)
         {
-            _settings.isAvatarVisibleInFirstPerson = value;
+            _settings.isAvatarVisibleInFirstPerson.value = value;
         }
 
         [UIAction("resize-mode-change")]
         private void OnResizeModeChanged(AvatarResizeMode value)
         {
-            _settings.resizeMode = value;
-            _avatarManager.ResizeCurrentAvatar();
+            _settings.resizeMode.value = value;
         }
 
         [UIAction("resize-mode-formatter")]
@@ -83,8 +87,7 @@ namespace CustomAvatar.UI
         [UIAction("enable-locomotion-change")]
         private void OnEnableLocomotionChanged(bool value)
         {
-            _settings.enableLocomotion = value;
-            _avatarManager.UpdateLocomotionEnabled();
+            _settings.enableLocomotion.value = value;
         }
 
         [UIAction("floor-height-adjust-formatter")]
@@ -108,8 +111,7 @@ namespace CustomAvatar.UI
         [UIAction("floor-height-adjust-change")]
         private void OnFloorHeightAdjustChanged(FloorHeightAdjust value)
         {
-            _settings.floorHeightAdjust = value;
-            _avatarManager.UpdateFloorOffsetForCurrentAvatar();
+            _settings.floorHeightAdjust.value = value;
         }
 
         [UIAction("camera-clip-plane-change")]
@@ -139,8 +141,7 @@ namespace CustomAvatar.UI
         [UIAction("move-floor-with-room-adjust-change")]
         private void OnMoveFloorWithRoomAdjustChanged(bool value)
         {
-            _settings.moveFloorWithRoomAdjust = value;
-            _avatarManager.ResizeCurrentAvatar();
+            _settings.moveFloorWithRoomAdjust.value = value;
         }
 
         #endregion
@@ -148,6 +149,8 @@ namespace CustomAvatar.UI
         #region Arm Span Measurement
 
         private const float kMinArmSpan = 0.5f;
+        private const float kStableMeasurementTimeout = 3f;
+        private const float kMinDifferenceToReset = 0.02f;
 
         private bool _isMeasuring;
         private float _lastUpdateTime;
@@ -156,6 +159,7 @@ namespace CustomAvatar.UI
         private void MeasureArmSpan()
         {
             if (_isMeasuring) return;
+            if (!_playerInput.TryGetPose(DeviceUse.LeftHand, out Pose _) || !_playerInput.TryGetPose(DeviceUse.RightHand, out Pose _)) return;
 
             _isMeasuring = true;
             _lastMeasuredArmSpan = kMinArmSpan;
@@ -166,16 +170,16 @@ namespace CustomAvatar.UI
 
         private void ScanArmSpan()
         {
-            if (Time.timeSinceLevelLoad - _lastUpdateTime < 3 && _playerInput.TryGetPose(DeviceUse.LeftHand, out Pose leftHand) && _playerInput.TryGetPose(DeviceUse.RightHand, out Pose rightHand))
+            if (Time.timeSinceLevelLoad - _lastUpdateTime < kStableMeasurementTimeout && _playerInput.TryGetPose(DeviceUse.LeftHand, out Pose leftHand) && _playerInput.TryGetPose(DeviceUse.RightHand, out Pose rightHand))
             {
                 float armSpan = Vector3.Distance(leftHand.position, rightHand.position);
 
-                if (Mathf.Abs(armSpan - _lastMeasuredArmSpan) > 0.02f)
+                if (Mathf.Abs(armSpan - _lastMeasuredArmSpan) >= kMinDifferenceToReset)
                 {
                     _lastUpdateTime = Time.timeSinceLevelLoad;
                 }
 
-                _lastMeasuredArmSpan = (_lastMeasuredArmSpan + armSpan) / 2;
+                _lastMeasuredArmSpan = Mathf.Max(kMinArmSpan, (_lastMeasuredArmSpan + armSpan) / 2);
                 _armSpanLabel.SetText($"Measuring... {_lastMeasuredArmSpan:0.00} m");
             }
             else
@@ -183,13 +187,8 @@ namespace CustomAvatar.UI
                 CancelInvoke(nameof(ScanArmSpan));
 
                 _armSpanLabel.SetText($"{_lastMeasuredArmSpan:0.00} m");
-                _settings.playerArmSpan = _lastMeasuredArmSpan;
+                _settings.playerArmSpan.value = _lastMeasuredArmSpan;
                 _isMeasuring = false;
-
-                if (_settings.resizeMode == AvatarResizeMode.ArmSpan)
-                {
-                    _avatarManager.ResizeCurrentAvatar();
-                }
             }
         }
 

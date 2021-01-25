@@ -1,5 +1,5 @@
 //  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@ using CustomAvatar.Avatar;
 using CustomAvatar.Player;
 using BeatSaberMarkupLanguage.ViewControllers;
 using BeatSaberMarkupLanguage.Attributes;
-using CustomAvatar.Utilities;
+using System;
+using HMUI;
 
 namespace CustomAvatar.UI
 {
@@ -35,46 +36,50 @@ namespace CustomAvatar.UI
         private MirrorHelper _mirrorHelper;
         private Settings _settings;
         private PlayerAvatarManager _avatarManager;
-        private ShaderLoader _shaderLoader;
+        private FloorController _floorController;
 
         #region Components
         #pragma warning disable CS0649
 
         [UIComponent("loader")] private readonly Transform _loader;
-        [UIComponent("shader-error-text")] private readonly Transform _shaderErrorText;
+        [UIComponent("error-text")] private readonly CurvedTextMeshPro _errorText;
 
         #pragma warning restore CS0649
         #endregion
 
         #region Behaviour Lifecycle
-        #pragma warning disable IDE0051
 
         [Inject]
-        private void Inject(MirrorHelper mirrorHelper, Settings settings, PlayerAvatarManager avatarManager, ShaderLoader shaderLoader)
+        private void Inject(MirrorHelper mirrorHelper, Settings settings, PlayerAvatarManager avatarManager, FloorController floorController)
         {
             _mirrorHelper = mirrorHelper;
             _settings = settings;
             _avatarManager = avatarManager;
-            _shaderLoader = shaderLoader;
+            _floorController = floorController;
         }
-
-        #pragma warning restore IDE0051
-        #endregion
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
+            name = nameof(MirrorViewController);
+
             if (addedToHierarchy)
             {
-                _shaderErrorText.gameObject.SetActive(_shaderLoader.hasErrors);
+                Transform screenSystem = GameObject.Find("Wrapper/ScreenSystem").transform;
 
                 _mirrorContainer = new GameObject("Mirror Container");
+                _mirrorContainer.transform.SetParent(screenSystem, false);
+                _mirrorContainer.transform.position = new Vector3(0, _floorController.floorPosition, 0);
+
                 Vector2 mirrorSize = _settings.mirror.size;
-                _mirrorHelper.CreateMirror(new Vector3(0, mirrorSize.y / 2, 2), Quaternion.Euler(-90f, 0, 0), mirrorSize, _mirrorContainer.transform);
+                _mirrorHelper.CreateMirror(new Vector3(0, mirrorSize.y / 2, 2.6f), Quaternion.Euler(-90f, 0, 0), mirrorSize, _mirrorContainer.transform);
 
                 _avatarManager.avatarStartedLoading += OnAvatarStartedLoading;
                 _avatarManager.avatarChanged += OnAvatarChanged;
+                _avatarManager.avatarLoadFailed += OnAvatarLoadFailed;
+
+                _floorController.floorPositionChanged += OnFloorPositionChanged;
 
                 SetLoading(false);
             }
@@ -88,10 +93,15 @@ namespace CustomAvatar.UI
             {
                 _avatarManager.avatarStartedLoading -= OnAvatarStartedLoading;
                 _avatarManager.avatarChanged -= OnAvatarChanged;
+                _avatarManager.avatarLoadFailed -= OnAvatarLoadFailed;
+
+                _floorController.floorPositionChanged -= OnFloorPositionChanged;
             }
 
             Destroy(_mirrorContainer);
         }
+
+        #endregion
 
         private void OnAvatarStartedLoading(string fileName)
         {
@@ -103,9 +113,25 @@ namespace CustomAvatar.UI
             SetLoading(false);
         }
 
+        private void OnAvatarLoadFailed(Exception exception)
+        {
+            SetLoading(false);
+
+            _errorText.color = new Color(0.85f, 0.85f, 0.85f, 0.8f);
+            _errorText.text = $"Failed to load selected avatar\n<size=3>{exception.Message}</size>";
+            _errorText.gameObject.SetActive(true);
+        }
+
+        private void OnFloorPositionChanged(float y)
+        {
+            Vector3 position = _mirrorContainer.transform.position;
+            _mirrorContainer.transform.position = new Vector3(position.x, y, position.z);
+        }
+
         private void SetLoading(bool loading)
         {
             _loader.gameObject.SetActive(loading);
+            _errorText.gameObject.SetActive(false);
         }
     }
 }

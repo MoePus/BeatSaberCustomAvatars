@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -80,7 +80,7 @@ namespace CustomAvatar.Player
 
             _leftHandAnimAction = new SkeletalInput("/actions/customavatars/in/lefthandanim");
             _rightHandAnimAction = new SkeletalInput("/actions/customavatars/in/righthandanim");
-
+            
             OnAvatarChanged(_avatarManager.currentlySpawnedAvatar);
             OnDevicesUpdated();
         }
@@ -303,8 +303,8 @@ namespace CustomAvatar.Player
         {
             if (_avatarSettings != null)
             {
-                _avatarSettings.useAutomaticCalibrationChanged -= OnUseAutomaticCalibrationChanged;
-                _avatarSettings.bypassCalibrationChanged       -= OnBypassCalibrationChanged;
+                _avatarSettings.useAutomaticCalibration.changed -= OnUseAutomaticCalibrationChanged;
+                _avatarSettings.bypassCalibration.changed       -= OnBypassCalibrationChanged;
             }
 
             if (!spawnedAvatar)
@@ -318,8 +318,8 @@ namespace CustomAvatar.Player
             _avatarSettings = _settings.GetAvatarSettings(spawnedAvatar.avatar.fileName);
             _manualCalibration = _calibrationData.GetAvatarManualCalibration(spawnedAvatar.avatar.fileName);
 
-            _avatarSettings.useAutomaticCalibrationChanged += OnUseAutomaticCalibrationChanged;
-            _avatarSettings.bypassCalibrationChanged       += OnBypassCalibrationChanged;
+            _avatarSettings.useAutomaticCalibration.changed += OnUseAutomaticCalibrationChanged;
+            _avatarSettings.bypassCalibration.changed       += OnBypassCalibrationChanged;
         }
 
         private bool TryGetCalibratedHandPose(DeviceUse use, out Pose pose)

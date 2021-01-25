@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@ using UnityEngine;
 
 namespace CustomAvatar.Avatar
 {
-    internal class AvatarInfo
+    internal readonly struct AvatarInfo
     {
         /// <summary>
         /// Name of the avatar.
@@ -64,6 +64,8 @@ namespace CustomAvatar.Avatar
 
         internal AvatarInfo(string name, string author, Texture2D icon, string fileName, long fileSize, DateTime created, DateTime lastModified, DateTime timestamp)
         {
+            if (string.IsNullOrWhiteSpace(fileName)) throw new ArgumentNullException(nameof(fileName));
+
             this.name = name;
             this.author = author;
             this.icon = icon;
@@ -76,8 +78,8 @@ namespace CustomAvatar.Avatar
 
         public AvatarInfo(LoadedAvatar avatar)
         {
-            name = avatar.descriptor.name;
-            author = avatar.descriptor.author;
+            name = avatar.descriptor.name ?? "Unknown";
+            author = avatar.descriptor.author ?? "Unknown";
             icon = avatar.descriptor.cover ? avatar.descriptor.cover.texture : null;
 
             var fileInfo = new FileInfo(avatar.fullPath);
@@ -87,21 +89,7 @@ namespace CustomAvatar.Avatar
             created = fileInfo.CreationTimeUtc;
             lastModified = fileInfo.LastWriteTimeUtc;
 
-            timestamp = DateTime.Now;
-        }
-
-        public static bool operator ==(AvatarInfo left, AvatarInfo right)
-        {
-            if (ReferenceEquals(left, null)) return false;
-
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(AvatarInfo left, AvatarInfo right)
-        {
-            if (ReferenceEquals(left, null)) return false;
-
-            return !left.Equals(right);
+            timestamp = DateTime.UtcNow;
         }
 
         public bool IsForFile(string filePath)
@@ -122,21 +110,7 @@ namespace CustomAvatar.Avatar
 
         public override int GetHashCode()
         {
-            int hash = 23;
-
-            var fields = new object[] { name, author, icon, fileName, fileSize, created, lastModified, timestamp };
-
-            unchecked
-            {
-                foreach (object field in fields)
-                {
-                    if (field == null) continue;
-
-                    hash = hash * 17 + field.GetHashCode();
-                }
-            }
-
-            return hash;
+            return (name, author, icon, fileName, fileSize, created, lastModified, timestamp).GetHashCode();
         }
     }
 }

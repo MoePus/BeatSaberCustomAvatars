@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -19,4 +19,4 @@
 // Project-level suppressions either have no target or are given
 // a specific target and scoped to a namespace, type, member, etc.
 
-[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006", Justification = "Unity naming convention", Scope = "namespaceanddescendants", Target = "CustomAvatar")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006", Justification = "Unity naming convention", Scope = "namespaceanddescendants", Target = "~N:CustomAvatar")]

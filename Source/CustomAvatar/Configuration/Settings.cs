@@ -1,5 +1,5 @@
 //  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,47 +23,23 @@ using CustomAvatar.Player;
 using CustomAvatar.Lighting;
 using CustomAvatar.Tracking;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using UnityEngine;
 
 namespace CustomAvatar.Configuration
 {
     internal class Settings
     {
-        public event Action<bool> firstPersonEnabledChanged;
-        public event Action<bool> moveFloorWithRoomAdjustChanged;
-
-        private bool _isAvatarVisibleInFirstPerson;
-        public bool isAvatarVisibleInFirstPerson
-        {
-            get => _isAvatarVisibleInFirstPerson;
-            set
-            {
-                _isAvatarVisibleInFirstPerson = value;
-                firstPersonEnabledChanged?.Invoke(value);
-            }
-        }
-
-        private bool _moveFloorWithRoomAdjust = false;
-
-        public bool moveFloorWithRoomAdjust
-        {
-            get => _moveFloorWithRoomAdjust;
-            set
-            {
-                _moveFloorWithRoomAdjust = value;
-                moveFloorWithRoomAdjustChanged?.Invoke(value);
-            }
-        }
-
-        [JsonConverter(typeof(StringEnumConverter))] public AvatarResizeMode resizeMode = AvatarResizeMode.Height;
-        [JsonConverter(typeof(StringEnumConverter))] public FloorHeightAdjust floorHeightAdjust = FloorHeightAdjust.Off;
+        public readonly ObservableValue<bool> isAvatarVisibleInFirstPerson = new ObservableValue<bool>();
+        public readonly ObservableValue<bool> moveFloorWithRoomAdjust = new ObservableValue<bool>();
+        public readonly ObservableValue<AvatarResizeMode> resizeMode = new ObservableValue<AvatarResizeMode>(AvatarResizeMode.Height);
+        public readonly ObservableValue<FloorHeightAdjust> floorHeightAdjust = new ObservableValue<FloorHeightAdjust>(FloorHeightAdjust.Off);
         public string previousAvatarPath = null;
-        public float playerArmSpan = VRPlayerInput.kDefaultPlayerArmSpan;
+        public readonly ObservableValue<float> playerArmSpan = new ObservableValue<float>(VRPlayerInput.kDefaultPlayerArmSpan);
         public bool calibrateFullBodyTrackingOnStart = false;
-        public bool enableLocomotion = true;
+        public readonly ObservableValue<bool> enableLocomotion = new ObservableValue<bool>(true);
         public float cameraNearClipPlane = 0.1f;
         public float eyeTrackingScale = 1.0f;
+        public bool showAvatarInSmoothCamera = true;
         public readonly Lighting lighting = new Lighting();
         public readonly Mirror mirror = new Mirror();
         public readonly AutomaticFullBodyCalibration automaticCalibration = new AutomaticFullBodyCalibration();
@@ -97,14 +72,18 @@ namespace CustomAvatar.Configuration
 
         public class Lighting
         {
-            [JsonConverter(typeof(StringEnumConverter))] public LightingQuality quality = LightingQuality.Off;
-            public bool enableDynamicLighting = false;
+            public LightingLevel level = LightingLevel.Off;
+            public ShadowQuality shadowQuality = ShadowQuality.Disable;
+            public ShadowLevel shadowLevel = ShadowLevel.Directional;
+            public ShadowResolution shadowResolution = ShadowResolution.Low;
+            public int pixelLightCount = 2;
         }
 
         public class Mirror
         {
-            public Vector2 size = new Vector2(5f, 2.5f);
+            public Vector2 size = new Vector2(4f, 2f);
             public float renderScale = 1.0f;
+            public int antiAliasing = 2;
         }
 
         public class FullBodyMotionSmoothing
@@ -129,34 +108,10 @@ namespace CustomAvatar.Configuration
 
         public class AvatarSpecificSettings
         {
-            public event Action<bool> useAutomaticCalibrationChanged;
-            public event Action<bool> bypassCalibrationChanged;
-
-            public bool useAutomaticCalibration
-            {
-                get => _useAutomaticCalibration;
-                set
-                {
-                    _useAutomaticCalibration = value;
-                    useAutomaticCalibrationChanged?.Invoke(value);
-                }
-            }
-
-            public bool bypassCalibration
-            {
-                get => _bypassCalibration;
-                set
-                {
-                    _bypassCalibration = value;
-                    bypassCalibrationChanged?.Invoke(value);
-                }
-            }
-
-            public bool ignoreExclusions = false;
+            public readonly ObservableValue<bool> useAutomaticCalibration = new ObservableValue<bool>();
+            public readonly ObservableValue<bool> bypassCalibration = new ObservableValue<bool>();
+            public readonly ObservableValue<bool> ignoreExclusions = new ObservableValue<bool>(false);
             public bool allowMaintainPelvisPosition = false;
-
-            private bool _useAutomaticCalibration = false;
-            private bool _bypassCalibration = false;
         }
 
         public AvatarSpecificSettings GetAvatarSettings(string fileName)

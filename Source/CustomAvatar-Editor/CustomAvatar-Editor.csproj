@@ -7,6 +7,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <DefineConstants>UNITY_EDITOR</DefineConstants>
     <UnityProjectDir>$(ProjectDir)..\..\Unity\BeatSaberCustomAvatars</UnityProjectDir>
+    <PathMap>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)=$(MSBuildProjectName)</PathMap>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration) == 'Release'">
     <DebugType>none</DebugType>
@@ -70,6 +71,7 @@
     </Compile>
     <Compile Include="..\CustomAvatar\EveryNthComboFilter.cs" Link="EveryNthComboFilter.cs" />
     <Compile Include="..\CustomAvatar\FirstPersonExclusion.cs" Link="FirstPersonExclusion.cs" />
+    <Compile Include="..\CustomAvatar\GlobalSuppressions.cs" Link="GlobalSuppressions.cs" />
     <Compile Include="..\CustomAvatar\Logging\ILogger.cs" Link="Logging\ILogger.cs" />
     <Compile Include="..\CustomAvatar\Logging\ILoggerProvider.cs" Link="Logging\ILoggerProvider.cs" />
     <Compile Include="..\CustomAvatar\Logging\UnityDebugLogger.cs" Link="Logging\UnityDebugLogger.cs" />
@@ -85,6 +87,9 @@
     <!-- remove deps.json file since it's not used -->
     <Delete Files="$(TargetDir)$(TargetName).deps.json" />
 
+    <!-- make sure we have a clean slate -->
+    <RemoveDir Directories="$(PublishDir)" />
+    
     <MakeDir Directories="$(PublishDir)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PublishDir)" />
     

@@ -1,5 +1,5 @@
 //  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ namespace CustomAvatar.UI
 
         private PlayerAvatarManager _avatarManager;
         private DiContainer _container;
+        private PlayerOptionsViewController _playerOptionsViewController;
 
         private TableView _tableView;
         private GameObject _loadingIndicator;
@@ -48,15 +49,18 @@ namespace CustomAvatar.UI
         private Texture2D _noAvatarIcon;
 
         [Inject]
-        private void Inject(PlayerAvatarManager avatarManager, DiContainer container)
+        private void Inject(PlayerAvatarManager avatarManager, DiContainer container, PlayerOptionsViewController playerOptionsViewController)
         {
             _avatarManager = avatarManager;
             _container = container;
+            _playerOptionsViewController = playerOptionsViewController;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
+
+            name = nameof(AvatarListViewController);
 
             if (firstActivation)
             {
@@ -66,6 +70,7 @@ namespace CustomAvatar.UI
                 _noAvatarIcon = LoadTextureFromResource("CustomAvatar.Resources.ban.png");
 
                 CreateTableView();
+                CreateRefreshButton();
 
                 rectTransform.sizeDelta = new Vector2(120, 0);
                 rectTransform.offsetMin = new Vector2(-60, 0);
@@ -75,12 +80,10 @@ namespace CustomAvatar.UI
             if (addedToHierarchy)
             {
                 _avatarManager.avatarChanged += OnAvatarChanged;
+                _avatarManager.avatarAdded   += OnAvatarAdded;
+                _avatarManager.avatarRemoved += OnAvatarRemoved;
 
-                _avatars.Clear();
-                _avatars.Add(new AvatarListItem("No Avatar", _noAvatarIcon));
-
-                SetLoading(true);
-                _avatarManager.GetAvatarInfosAsync(avatar => _avatars.Add(new AvatarListItem(avatar)), null, ReloadData);
+                ReloadAvatars();
             }
         }
 
@@ -152,6 +155,33 @@ namespace CustomAvatar.UI
             tableViewContainer.gameObject.SetActive(true);
         }
 
+        private void CreateRefreshButton()
+        {
+            GameObject gameObject = _container.InstantiatePrefab(_playerOptionsViewController.transform.Find("PlayerOptions/ViewPort/Content/CommonSection/PlayerHeight/MeassureButton").gameObject, transform);
+            GameObject iconObject = gameObject.transform.Find("Icon").gameObject;
+
+            gameObject.name = "RefreshButton";
+
+            RectTransform rectTransform = (RectTransform)gameObject.transform;
+            rectTransform.anchorMin = new Vector2(1, 0);
+            rectTransform.anchorMax = new Vector2(1, 0);
+            rectTransform.offsetMin = new Vector2(-12, 2);
+            rectTransform.offsetMax = new Vector2(-2, 10);
+
+            Button button = gameObject.GetComponent<Button>();
+            button.onClick.AddListener(OnRefreshButtonPressed);
+            button.transform.SetParent(transform);
+
+            ImageView image = iconObject.GetComponent<ImageView>();
+            Texture2D icon = LoadTextureFromResource("CustomAvatar.Resources.arrows-rotate.png");
+            image.sprite = Sprite.Create(icon, new Rect(0, 0, icon.width, icon.height), new Vector2(0.5f, 0.5f));
+
+            HoverHint hoverHint = _container.InstantiateComponent<HoverHint>(gameObject);
+            hoverHint.text = "Force reload all avatars, including the one currently spawned. This will most likely lag your game for a few seconds if you have many avatars loaded.";
+
+            Destroy(gameObject.GetComponent<LocalizedHoverHint>());
+        }
+
         private Texture2D LoadTextureFromResource(string resourceName)
         {
             Texture2D texture = new Texture2D(0, 0);
@@ -173,6 +203,8 @@ namespace CustomAvatar.UI
             if (removedFromHierarchy)
             {
                 _avatarManager.avatarChanged -= OnAvatarChanged;
+                _avatarManager.avatarAdded   -= OnAvatarAdded;
+                _avatarManager.avatarRemoved -= OnAvatarRemoved;
             }
         }
 
@@ -184,6 +216,34 @@ namespace CustomAvatar.UI
         private void OnAvatarChanged(SpawnedAvatar avatar)
         {
             UpdateSelectedRow();
+        }
+
+        private void OnAvatarAdded(AvatarInfo avatarInfo)
+        {
+            _avatars.Add(new AvatarListItem(avatarInfo));
+            ReloadData();
+        }
+
+        private void OnAvatarRemoved(AvatarInfo avatarInfo)
+        {
+            _avatars.RemoveAll(a => a.fileName == avatarInfo.fileName);
+            ReloadData();
+        }
+
+        private void OnRefreshButtonPressed()
+        {
+            ReloadAvatars(true);
+        }
+
+        private void ReloadAvatars(bool force = false)
+        {
+            _avatars.Clear();
+            _tableView.ReloadData();
+
+            SetLoading(true);
+
+            _avatars.Add(new AvatarListItem("No Avatar", _noAvatarIcon));
+            _avatarManager.GetAvatarInfosAsync(avatar => _avatars.Add(new AvatarListItem(avatar)), null, ReloadData, force);
         }
 
         private void ReloadData()

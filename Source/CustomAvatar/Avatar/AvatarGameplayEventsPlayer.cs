@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -34,15 +34,13 @@ namespace CustomAvatar.Avatar
         #pragma warning disable IDE0051
 
         [Inject]
-        public void Inject(ILoggerProvider loggerProvider, LoadedAvatar avatar, ScoreController scoreController, BeatmapObjectCallbackController beatmapObjectCallbackController, ILevelEndActions levelEndActions)
+        public void Inject(ILoggerProvider loggerProvider, LoadedAvatar avatar, ScoreController scoreController, BeatmapObjectCallbackController beatmapObjectCallbackController, ObstacleSaberSparkleEffectManager sparkleEffectManager, ILevelEndActions levelEndActions)
         {
             _logger = loggerProvider.CreateLogger<AvatarGameplayEventsPlayer>(avatar.descriptor.name);
             _scoreController = scoreController;
             _levelEndActions = levelEndActions;
             _beatmapObjectCallbackController = beatmapObjectCallbackController;
-
-            // unfortunately this is not bound through Zenject
-            _sparkleEffectManager = FindObjectOfType<ObstacleSaberSparkleEffectManager>();
+            _sparkleEffectManager = sparkleEffectManager;
         }
 
         private void Start()

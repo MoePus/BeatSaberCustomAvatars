@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -48,20 +48,18 @@ namespace CustomAvatar.Player
             }
             else if (Input.GetKeyDown(KeyCode.Home))
             {
-                _settings.isAvatarVisibleInFirstPerson = !_settings.isAvatarVisibleInFirstPerson;
-                _logger.Info($"{(_settings.isAvatarVisibleInFirstPerson ? "Enabled" : "Disabled")} first person visibility");
+                _settings.isAvatarVisibleInFirstPerson.value = !_settings.isAvatarVisibleInFirstPerson;
+                _logger.Info($"{(_settings.isAvatarVisibleInFirstPerson.value ? "Enabled" : "Disabled")} first person visibility");
             }
             else if (Input.GetKeyDown(KeyCode.End))
             {
-                _settings.resizeMode = (AvatarResizeMode)(((int)_settings.resizeMode + 1) % 3);
+                _settings.resizeMode.value = (AvatarResizeMode)(((int)_settings.resizeMode.value + 1) % 3);
                 _logger.Info($"Set resize mode to {_settings.resizeMode}");
-                _avatarManager.ResizeCurrentAvatar();
             }
             else if (Input.GetKeyDown(KeyCode.Insert))
             {
-                _settings.floorHeightAdjust = (FloorHeightAdjust)(((int)_settings.floorHeightAdjust + 1) % Enum.GetValues(typeof(FloorHeightAdjust)).Length);
+                _settings.floorHeightAdjust.value = (FloorHeightAdjust)(((int)_settings.floorHeightAdjust.value + 1) % Enum.GetValues(typeof(FloorHeightAdjust)).Length);
                 _logger.Info($"Set floor height adjust to {_settings.floorHeightAdjust}");
-                _avatarManager.ResizeCurrentAvatar();
             }
         }
     }

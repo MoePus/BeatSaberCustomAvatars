@@ -5,7 +5,7 @@
     <AssemblyName>CustomAvatar</AssemblyName>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <AutomatedBuild>false</AutomatedBuild>
+    <PathMap>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)=$(MSBuildProjectName)</PathMap>
   </PropertyGroup>
   <PropertyGroup Condition="$(Configuration) == 'Release'">
     <DebugType>none</DebugType>
@@ -153,21 +153,22 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
-    <EmbeddedResource Include="Views\Mirror.bsml" />
-    <EmbeddedResource Include="Views\Settings.bsml" />
-    <EmbeddedResource Include="Resources\icon.png" />
-    <EmbeddedResource Include="Resources\mystery-man.png" />
-    <EmbeddedResource Include="Resources\ban.png" />
+    <EmbeddedResource Include="Views\**\*.*" />
+    <EmbeddedResource Include="Resources\**\*.*" />
   </ItemGroup>
   <ItemGroup>
     <CopyToOutput Include="$(ProjectDir)..\..\Packaging\CustomAvatar\**\*.*" />
   </ItemGroup>
   <ItemGroup>
+    <None Remove="Resources\shaders.assets" />
     <None Remove="Views\Mirror.bsml" />
   </ItemGroup>
-  <Target Name="Organize" AfterTargets="AfterBuild">    
+  <Target Name="Organize" AfterTargets="AfterBuild">
     <!-- remove deps.json file since it's not used -->
     <Delete Files="$(TargetDir)$(TargetName).deps.json" />
+
+    <!-- make sure we have a clean slate -->
+    <RemoveDir Directories="$(PublishDir)" />
     
     <!-- create Plugins folder and move plugin DLL/PDB inside -->
     <MakeDir Directories="$(PublishDir)Plugins" />
@@ -177,11 +178,12 @@
     <!-- copy static files -->
     <Copy SourceFiles="@(CopyToOutput)" DestinationFiles="@(CopyToOutput->'$(PublishDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
-  <Target Name="CopyToBeatSaberFolder" AfterTargets="AfterBuild" Condition="$(AutomatedBuild) == 'false' and $(BeatSaberDir) != ''">
+  <Target Name="CopyToBeatSaberFolder" AfterTargets="AfterBuild" Condition="$(BeatSaberDir) != ''">
     <ItemGroup>
       <CopyToBeatSaberFolder Include="$(PublishDir)**\*.*" />
     </ItemGroup>
     
     <Copy SourceFiles="@(CopyToBeatSaberFolder)" DestinationFiles="@(CopyToBeatSaberFolder->'$(BeatSaberDir)\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
+  <ProjectExtensions><VisualStudio><UserProperties manifest_1json__JsonSchema="https://json-schema.org/draft-04/schema" /></VisualStudio></ProjectExtensions>
 </Project>

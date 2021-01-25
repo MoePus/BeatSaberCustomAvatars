@@ -1,4 +1,6 @@
 ﻿<bg>
   <loading-indicator id="loader" />
-  <text id="shader-error-text" text="Shaders could not be loaded. Please reinstall Custom Avatars." color="red" align="Center" font-size="6" active="false" />
+  <vertical pref-width="140" anchor-min-y="0.5" anchor-max-y="0.5">
+    <text id="error-text" color="FF808020" align="Center" />
+  </vertical>
 </bg>

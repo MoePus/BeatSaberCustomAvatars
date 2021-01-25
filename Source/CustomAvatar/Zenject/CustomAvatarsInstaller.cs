@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -25,22 +25,24 @@ using CustomAvatar.Tracking;
 using CustomAvatar.Tracking.OpenVR;
 using CustomAvatar.Tracking.UnityXR;
 using CustomAvatar.Utilities;
-using UnityEngine;
 using UnityEngine.XR;
 using Valve.VR;
 using Zenject;
 using Logger = IPA.Logging.Logger;
 using System;
+using IPA.Utilities;
 
 namespace CustomAvatar.Zenject
 {
     internal class CustomAvatarsInstaller : Installer
     {
         private readonly Logger _logger;
+        private readonly PCAppInit _pcAppInit;
 
-        public CustomAvatarsInstaller(Logger logger)
+        public CustomAvatarsInstaller(Logger logger, PCAppInit pcAppInit)
         {
             _logger = logger;
+            _pcAppInit = pcAppInit;
         }
 
         public override void InstallBindings()
@@ -67,7 +69,7 @@ namespace CustomAvatar.Zenject
 
             // managers
             Container.BindInterfacesAndSelfTo<PlayerAvatarManager>().AsSingle().NonLazy();
-            Container.BindInterfacesAndSelfTo<MainCameraController>().AsSingle().NonLazy();
+            Container.BindInterfacesAndSelfTo<CamerasController>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<ShaderLoader>().AsSingle().NonLazy();
             Container.BindInterfacesAndSelfTo<DeviceManager>().AsSingle().NonLazy();
 
@@ -82,12 +84,8 @@ namespace CustomAvatar.Zenject
             Container.Bind<AvatarSpawner>().AsTransient();
             Container.Bind<IKHelper>().AsTransient();
             Container.Bind<TrackingHelper>().AsTransient();
-
-            // not sure if this is a great idea but w/e
-            if (!Container.HasBinding<MainSettingsModelSO>())
-            {
-                Container.Bind<MainSettingsModelSO>().FromInstance(Resources.FindObjectsOfTypeAll<MainSettingsModelSO>().First());
-            }
+            
+            Container.Bind<MainSettingsModelSO>().FromInstance(_pcAppInit.GetField<MainSettingsModelSO, PCAppInit>("_mainSettingsModel")).IfNotBound();
         }
     }
 }

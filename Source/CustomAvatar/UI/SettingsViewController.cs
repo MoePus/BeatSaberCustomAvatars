@@ -1,5 +1,5 @@
 //  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ using CustomAvatar.Tracking;
 using CustomAvatar.Utilities;
 using HMUI;
 using Polyglot;
-using System.Linq;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -61,12 +61,14 @@ namespace CustomAvatar.UI
         private CalibrationData _calibrationData;
         private ShaderLoader _shaderLoader;
         private VRPlayerInput _playerInput;
+        private PlayerDataModel _playerDataModel;
+        private GameplaySetupViewController _gameplaySetupViewController;
 
         private Settings.AvatarSpecificSettings _currentAvatarSettings;
         private CalibrationData.FullBodyCalibration _currentAvatarManualCalibration;
 
         [Inject]
-        private void Inject(ILoggerProvider loggerProvider, PlayerAvatarManager avatarManager, Settings settings, CalibrationData calibrationData, ShaderLoader shaderLoader, VRPlayerInput playerInput)
+        private void Inject(ILoggerProvider loggerProvider, PlayerAvatarManager avatarManager, Settings settings, CalibrationData calibrationData, ShaderLoader shaderLoader, VRPlayerInput playerInput, PlayerDataModel playerDataModel, GameplaySetupViewController gameplaySetupViewController)
         {
             _logger = loggerProvider.CreateLogger<SettingsViewController>();
             _avatarManager = avatarManager;
@@ -74,22 +76,23 @@ namespace CustomAvatar.UI
             _calibrationData = calibrationData;
             _shaderLoader = shaderLoader;
             _playerInput = playerInput;
+            _playerDataModel = playerDataModel;
+            _gameplaySetupViewController = gameplaySetupViewController;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
         {
             base.DidActivate(firstActivation, addedToHierarchy, screenSystemEnabling);
 
+            name = nameof(SettingsViewController);
+
             _visibleInFirstPerson.Value = _settings.isAvatarVisibleInFirstPerson;
-            _resizeMode.Value = _settings.resizeMode;
+            _resizeMode.Value = _settings.resizeMode.value;
             _enableLocomotion.Value = _settings.enableLocomotion;
-            _floorHeightAdjust.Value = _settings.floorHeightAdjust;
+            _floorHeightAdjust.Value = _settings.floorHeightAdjust.value;
             _moveFloorWithRoomAdjust.Value = _settings.moveFloorWithRoomAdjust;
             _calibrateFullBodyTrackingOnStart.Value = _settings.calibrateFullBodyTrackingOnStart;
             _cameraNearClipPlane.Value = _settings.cameraNearClipPlane;
-
-            SetLoading(false);
-            UpdateUI(_avatarManager.currentlySpawnedAvatar?.avatar);
 
             _armSpanLabel.SetText($"{_settings.playerArmSpan:0.00} m");
 
@@ -111,7 +114,7 @@ namespace CustomAvatar.UI
                     _logger.Error("Unlit shader not loaded; manual calibration points may not be visible");
                 }
 
-                Transform header = Instantiate(Resources.FindObjectsOfTypeAll<GameplaySetupViewController>().First().transform.Find("HeaderPanel"), rectTransform, false);
+                Transform header = Instantiate(_gameplaySetupViewController.transform.Find("HeaderPanel"), rectTransform, false);
 
                 header.name = "HeaderPanel";
 
@@ -132,8 +135,13 @@ namespace CustomAvatar.UI
             {
                 _avatarManager.avatarStartedLoading += OnAvatarStartedLoading;
                 _avatarManager.avatarChanged += OnAvatarChanged;
+                _avatarManager.avatarLoadFailed += OnAvatarLoadFailed;
                 _playerInput.inputChanged += OnInputChanged;
+                _settings.resizeMode.changed += OnSettingsResizeModeChanged;
             }
+
+            OnAvatarChanged(_avatarManager.currentlySpawnedAvatar);
+            OnSettingsResizeModeChanged(_settings.resizeMode);
         }
 
         protected override void DidDeactivate(bool removedFromHierarchy, bool screenSystemDisabling)
@@ -144,7 +152,9 @@ namespace CustomAvatar.UI
             {
                 _avatarManager.avatarStartedLoading -= OnAvatarStartedLoading;
                 _avatarManager.avatarChanged -= OnAvatarChanged;
+                _avatarManager.avatarLoadFailed -= OnAvatarLoadFailed;
                 _playerInput.inputChanged -= OnInputChanged;
+                _settings.resizeMode.changed -= OnSettingsResizeModeChanged;
             }
 
             DisableCalibrationMode(false);
@@ -160,6 +170,13 @@ namespace CustomAvatar.UI
             SetLoading(false);
             DisableCalibrationMode(false);
             UpdateUI(spawnedAvatar?.avatar);
+        }
+
+        private void OnAvatarLoadFailed(Exception exception)
+        {
+            SetLoading(false);
+            DisableCalibrationMode(false);
+            UpdateUI(null);
         }
 
         private void SetLoading(bool loading)
@@ -188,6 +205,11 @@ namespace CustomAvatar.UI
             {
                 textMesh.alpha = alpha;
             }
+        }
+
+        private void OnSettingsResizeModeChanged(AvatarResizeMode resizeMode)
+        {
+            _heightAdjustWarningText.gameObject.SetActive(resizeMode != AvatarResizeMode.None && _playerDataModel.playerData.playerSpecificSettings.automaticPlayerHeight);
         }
 
         private void UpdateUI(LoadedAvatar avatar)
@@ -224,6 +246,17 @@ namespace CustomAvatar.UI
 
         private void UpdateCalibrationButtons(LoadedAvatar avatar)
         {
+            if (_playerInput.TryGetUncalibratedPose(DeviceUse.LeftHand, out Pose _) && _playerInput.TryGetUncalibratedPose(DeviceUse.RightHand, out Pose _))
+            {
+                _measureButton.interactable = true;
+                _measureButtonHoverHint.text = "For optimal results, hold your arms out to either side of your body and point the ends of the controllers outwards as far as possible (turn your hands if necessary).";
+            }
+            else
+            {
+                _measureButton.interactable = false;
+                _measureButtonHoverHint.text = "Controllers not detected";
+            }
+
             if (avatar == null)
             {
                 _calibrateButton.interactable = false;

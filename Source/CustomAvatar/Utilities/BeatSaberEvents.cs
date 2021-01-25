@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -62,11 +62,9 @@ namespace CustomAvatar.Utilities
             playerHeightChanged?.Invoke(playerHeight);
         }
 
-        private static void CreateOrUpdateMirrorCamera(MirrorRendererSO __instance)
+        private static void CreateOrUpdateMirrorCamera(Camera ____mirrorCamera)
         {
-            Camera mirrorCamera = new Traverse(__instance).Field<Camera>("_mirrorCamera").Value;
-
-            mirrorCamera.cullingMask |= AvatarLayers.kAllLayersMask;
+            ____mirrorCamera.cullingMask |= AvatarLayers.kAllLayersMask;
         }
     }
 }

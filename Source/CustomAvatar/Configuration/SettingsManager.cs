@@ -1,5 +1,5 @@
 ﻿//  Beat Saber Custom Avatars - Custom player models for body presence in Beat Saber.
-//  Copyright © 2018-2020  Beat Saber Custom Avatars Contributors
+//  Copyright © 2018-2021  Beat Saber Custom Avatars Contributors
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,9 @@ using System.IO;
 using CustomAvatar.Logging;
 using Newtonsoft.Json;
 using CustomAvatar.Utilities.Converters;
+using Newtonsoft.Json.Converters;
+using CustomAvatar.Avatar;
+using CustomAvatar.Player;
 
 namespace CustomAvatar.Configuration
 {
@@ -92,7 +95,14 @@ namespace CustomAvatar.Configuration
             {
                 Formatting = Formatting.Indented,
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                Converters = { new Vector2JsonConverter(), new Vector3JsonConverter(), new QuaternionJsonConverter(), new PoseJsonConverter(), new FloatJsonConverter(), new ColorJsonConverter() }
+                Converters = {
+                    new StringEnumConverter(),
+                    new Vector2JsonConverter(),
+                    new ObservableValueJsonConverter<bool>(),
+                    new ObservableValueJsonConverter<float>(),
+                    new ObservableValueJsonConverter<AvatarResizeMode>(),
+                    new ObservableValueJsonConverter<FloorHeightAdjust>()
+                }
             };
         }
     }
